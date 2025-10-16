@@ -26,6 +26,7 @@ class AppBuilder:
 
     def __init__(self) -> None:
         self.settings = Settings()
+        print(self.settings.model_config)
         self.app: fastapi.FastAPI = fastapi.FastAPI(
             title=self.settings.service_name,
             debug=self.settings.debug,

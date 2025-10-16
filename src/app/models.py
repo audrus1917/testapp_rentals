@@ -22,10 +22,12 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(sa.String(36), primary_key=True)
-    # DELETE ME
-    name: Mapped[str] = mapped_column(sa.String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String(64), nullable=False, index=True)
     balance: Mapped[Decimal]
+    
+    # > гарантировать, что баланс пользователя не может быть отрицательным
+    __table_args__ = (sa.CheckConstraint("balance >= 0", name="_balance_positive"), )
 
 
 class Transaction(Base):
@@ -35,6 +37,4 @@ class Transaction(Base):
     type: Mapped[TransactionType]
     amount: Mapped[Decimal]
     created_at: Mapped[datetime.datetime]
-
-    user_id: Mapped[str] = mapped_column(sa.String(36), sa.ForeignKey("users.id"))
-    # END DELETE ME
+    user_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id"))

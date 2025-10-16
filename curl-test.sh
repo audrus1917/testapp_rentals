@@ -1,4 +1,4 @@
-TESTNUM="$1"
+TESTNUM="${1:-1}"
 USERID="${TESTNUM}-1"
 USERNAME="${TESTNUM}.boss"
 

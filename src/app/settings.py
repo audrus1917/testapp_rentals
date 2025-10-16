@@ -1,5 +1,9 @@
-# REMOVE ME
+"""Application settings."""
+
+from pathlib import Path
+
 import pydantic_settings
+
 from granian.log import LogLevels
 from sqlalchemy.engine.url import URL
 
@@ -18,6 +22,11 @@ class Settings(pydantic_settings.BaseSettings):
 
     app_port: int = 8000
 
+    model_config = pydantic_settings.SettingsConfigDict(
+        env_file = Path(__file__).parent / ".env",
+        env_file_encoding = "utf-8"
+    )
+
     @property
     def db_dsn(self) -> URL:
         return URL.create(
@@ -28,4 +37,3 @@ class Settings(pydantic_settings.BaseSettings):
             self.db_port,
             self.db_database,
         )
-# END REMOVE ME
