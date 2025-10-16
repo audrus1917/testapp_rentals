@@ -1,8 +1,12 @@
-TESTNUM="${1:-1}"
-USERID="${TESTNUM}-1"
+USERID="${1:-1}"
+if ! [[ "${USERID}" =~ ^[0-9]+$ ]] ; then
+   echo "error: Not a number" >&2; 
+   exit 1
+fi
+
 USERNAME="${TESTNUM}.boss"
 
-curl -X POST 'http://localhost:8000/api/user/' -H "Content-Type: application/json" --data-binary "{\"id\":\"${USERID}\",\"name\":\"USERNAME\"}"
+curl -X POST 'http://localhost:8000/api/user/' -H "Content-Type: application/json" --data-binary "{\"id\":${USERID},\"name\":\"USERNAME\"}"
 echo ""
 
 
@@ -12,7 +16,7 @@ transact() {
     date="$3"
     amount="$4"
     curl -X PUT 'http://localhost:8000/api/transaction/' -H "Content-Type: application/json" \
-        --data-binary "{\"uid\": \"txid-${TESTNUM}-${number}\",\"user_id\":\"${USERID}\",\"amount\":\"${amount}\",\"created_at\":\"${date} 01:00:00\",\"type\":\"${tp}\"}"
+        --data-binary "{\"uid\": \"txid-${TESTNUM}-${number}\",\"user_id\":${USERID},\"amount\":\"${amount}\",\"created_at\":\"${date} 01:00:00\",\"type\":\"${tp}\"}"
     echo ""
 }
 

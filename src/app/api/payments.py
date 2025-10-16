@@ -30,7 +30,7 @@ async def create_user(
 
 @ROUTER.get("/user/{user_id}/balance/")
 async def get_user_balance(
-    user_id: str,
+    user_id: int,
     ts: datetime | None = None,
     payment_repo: PaymentRepository = fastapi.Depends(get_payment_repo),
 ) -> schemas.UserBalance:

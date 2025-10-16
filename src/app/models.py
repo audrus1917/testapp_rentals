@@ -23,7 +23,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(sa.String(64), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(sa.String(50), nullable=False, index=True)
     balance: Mapped[Decimal]
     
     # > гарантировать, что баланс пользователя не может быть отрицательным

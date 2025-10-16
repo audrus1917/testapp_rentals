@@ -1,3 +1,5 @@
+from typing import Optional
+
 import asyncio
 from datetime import datetime
 from decimal import Decimal
@@ -23,8 +25,6 @@ class PaymentRepository:
         self.db_session_maker = db_session_maker
 
     async def create_user(self, data: schemas.UserCreate) -> User:
-        ...
-        # REMOVE ME
         try:
             async with self.db_session_maker.begin() as session:
                 user = User(
@@ -36,10 +36,8 @@ class PaymentRepository:
         except IntegrityError:
             raise UserExistsError(f"User with id {data.id} already exists")
         return user
-        # END REMOVE ME
 
-    async def get_user_balance(self, user_id: str, ts: datetime | None = None) -> Decimal | None:
-        # REMOVE ME
+    async def get_user_balance(self, user_id: int, ts: datetime | None = None) -> Decimal | None:
         async with self.db_session_maker() as session:
             if ts is None:
                 query = sa.select(User.balance).where(User.id == user_id)
@@ -58,10 +56,8 @@ class PaymentRepository:
             return (
                 await session.execute(query)
             ).scalar()
-        # END REMOVE ME
 
     async def add_transaction(self, data: schemas.TransactionAdd) -> Transaction:
-        # REMOVE ME
         try:
             return await self._add_transaction(data)
         except IntegrityError:
@@ -69,7 +65,7 @@ class PaymentRepository:
 
     async def _add_transaction(self, data: schemas.TransactionAdd) -> Transaction:
         async with self.db_session_maker.begin() as session:
-            user = (
+            user: Optional[User] = (
                 await session.execute(
                     sa.select(User).with_for_update().where(User.id == data.user_id)
                 )
@@ -96,7 +92,6 @@ class PaymentRepository:
                 .values(balance=new_balance)
             )
         return transaction
-        # END REMOVE ME
 
     async def get_transaction(self, transaction_id: str) -> Transaction:
         async with self.db_session_maker() as session:

@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import datetime
 
 import pydantic
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.types import TransactionType
 
@@ -12,21 +12,21 @@ class Base(BaseModel):
 
 
 class User(Base):
-    id: str
-    name: str
+    id: int
+    name: str = Field(max_length=64)
 
 
 class UserCreate(Base):
-    id: str
+    id: int
     name: str
 
-# REMOVE ME
+
 class TransactionBase(Base):
     amount: Decimal
     type: TransactionType
-    uid: str
+    uid: str = Field(max_length=36)
     created_at: datetime
-    user_id: str
+    user_id: int
 
 
 class TransactionAdd(TransactionBase):
@@ -39,4 +39,3 @@ class Transaction(TransactionBase):
 
 class UserBalance(Base):
     balance: Decimal
-# END REMOVE ME
