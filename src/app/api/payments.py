@@ -2,10 +2,11 @@ from datetime import datetime
 import typing
 
 import fastapi
+from fastapi import Response
 from starlette import status
 
 from app import schemas
-from app.exceptions import PaymentError, UserExistsError
+from app.exceptions import PaymentError, UserExistsError, UserDoesNotExist
 from app.repositories import PaymentRepository
 from app.api.base import get_payment_repo
 
@@ -13,7 +14,7 @@ from app.api.base import get_payment_repo
 ROUTER: typing.Final = fastapi.APIRouter()
 
 
-@ROUTER.post("/user/")
+@ROUTER.post("/user/", response_model=schemas.User)
 async def create_user(
     data: schemas.UserCreate,
     payment_repo: PaymentRepository = fastapi.Depends(get_payment_repo),
@@ -28,7 +29,7 @@ async def create_user(
     return typing.cast(schemas.User, user)
 
 
-@ROUTER.get("/user/{user_id}/balance/")
+@ROUTER.get("/user/{user_id}/balance/", response_model=schemas.UserBalance)
 async def get_user_balance(
     user_id: int,
     ts: datetime | None = None,
@@ -41,8 +42,9 @@ async def get_user_balance(
     return typing.cast(schemas.UserBalance, {"balance": balance})
 
 
-@ROUTER.put("/transaction/")
+@ROUTER.post("/transaction/")
 async def add_transaction(
+    response: Response,
     data: schemas.TransactionAdd,
     payment_repo: PaymentRepository = fastapi.Depends(get_payment_repo),
 ) -> schemas.Transaction:
@@ -53,11 +55,16 @@ async def add_transaction(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
         )
-
+    except UserDoesNotExist as e:
+        raise fastapi.HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    response.status_code = status.HTTP_201_CREATED
     return typing.cast(schemas.Transaction, transaction)
 
 
-@ROUTER.post("/transaction/{transaction_id}")
+@ROUTER.get("/transaction/{transaction_id}")
 async def get_transaction(
     transaction_id: str,
     payment_repo: PaymentRepository = fastapi.Depends(get_payment_repo),
@@ -66,4 +73,3 @@ async def get_transaction(
     if transaction is None:
         raise fastapi.HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return typing.cast(schemas.Transaction, transaction)
-

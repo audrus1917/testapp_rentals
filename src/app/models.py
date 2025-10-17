@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm.exc import DetachedInstanceError
 
 from app.types import TransactionType
 
@@ -25,9 +26,15 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(50), nullable=False, index=True)
     balance: Mapped[Decimal]
-    
+
     # > гарантировать, что баланс пользователя не может быть отрицательным
-    __table_args__ = (sa.CheckConstraint("balance >= 0", name="_balance_positive"), )
+    __table_args__ = (sa.CheckConstraint("balance >= 0", name="_balance_positive"),)
+
+    def __repr__(self) -> str:
+        try:
+            return f"<User (id={self.id})>"
+        except DetachedInstanceError:
+            return "<User>"
 
 
 class Transaction(Base):

@@ -22,19 +22,17 @@ class UserCreate(Base):
 
 
 class TransactionBase(Base):
-    amount: Decimal
+    amount: Decimal = Field(gt=0)
     type: TransactionType
     uid: str = Field(max_length=36)
     created_at: datetime
     user_id: int
 
 
-class TransactionAdd(TransactionBase):
-    ...
+class TransactionAdd(TransactionBase): ...
 
 
-class Transaction(TransactionBase):
-    ...
+class Transaction(TransactionBase): ...
 
 
 class UserBalance(Base):

@@ -20,7 +20,6 @@ from app.types import TransactionType
 
 
 class PaymentRepository:
-
     def __init__(self, db_session_maker: async_sessionmaker[AsyncSessionType]):
         self.db_session_maker = db_session_maker
 
@@ -43,19 +42,17 @@ class PaymentRepository:
                 query = sa.select(User.balance).where(User.id == user_id)
             else:
                 query = sa.select(
-                    sa.func.sum(Transaction.amount * sa.case(
-                        (Transaction.type == TransactionType.WITHDRAW, sa.text('-1')),
-                        else_=sa.text('1')
-                    ))
+                    sa.func.sum(
+                        Transaction.amount
+                        * sa.case((Transaction.type == TransactionType.WITHDRAW, sa.text("-1")), else_=sa.text("1"))
+                    )
                 ).where(
                     sa.and_(
                         Transaction.user_id == user_id,
                         Transaction.created_at <= ts,
                     )
                 )
-            return (
-                await session.execute(query)
-            ).scalar()
+            return (await session.execute(query)).scalar()
 
     async def add_transaction(self, data: schemas.TransactionAdd) -> Transaction:
         try:
@@ -66,15 +63,16 @@ class PaymentRepository:
     async def _add_transaction(self, data: schemas.TransactionAdd) -> Transaction:
         async with self.db_session_maker.begin() as session:
             user: Optional[User] = (
-                await session.execute(
-                    sa.select(User).with_for_update().where(User.id == data.user_id)
-                )
+                await session.execute(sa.select(User).with_for_update().where(User.id == data.user_id))
             ).scalar()
+            if not user:
+                raise UserExistsError(f"User with ID = {data.user_id} does not exist")
+
             new_balance = (
                 user.balance + data.amount if data.type == TransactionType.DEPOSIT else user.balance - data.amount
             )
             if new_balance < 0:
-                raise PaymentError("Insufficient funds")
+                raise PaymentError(f"User with ID = {data.user_id}) has insufficient funds")
 
             await asyncio.sleep(1.0)  # simulate some latency
 
@@ -86,18 +84,12 @@ class PaymentRepository:
                 user_id=data.user_id,
             )
             session.add(transaction)
-            await session.execute(
-                sa.update(User)
-                .where(User.id == data.user_id)
-                .values(balance=new_balance)
-            )
+            await session.execute(sa.update(User).where(User.id == data.user_id).values(balance=new_balance))
         return transaction
 
     async def get_transaction(self, transaction_id: str) -> Transaction:
         async with self.db_session_maker() as session:
             transaction = (
-                await session.execute(
-                    sa.select(Transaction).where(Transaction.id == transaction_id)
-                )
+                await session.execute(sa.select(Transaction).where(Transaction.id == transaction_id))
             ).scalar()
         return transaction

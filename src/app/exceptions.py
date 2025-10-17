@@ -4,3 +4,7 @@ class PaymentError(Exception):
 
 class UserExistsError(Exception):
     pass
+
+
+class UserDoesNotExist(Exception):
+    pass
